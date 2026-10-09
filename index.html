@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melolo AI Drama Studio & Player</title>
+    <style>
+        :root {
+            --bg-color: #0d0e12;
+            --card-bg: #1a1c23;
+            --accent: #ff0055;
+            --accent-glow: #ff005580;
+            --text-main: #ffffff;
+            --text-sub: #a0a5b5;
+            --border-color: #2a2d3d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 5px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #121318;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--accent);
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+            margin-top: 5px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background-color: #2a2d3d;
+            box-shadow: none;
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ep-badge {
+            background-color: #121318;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .ep-badge.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .video-container {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #000;
+            margin-top: 10px;
+        }
+
+        video {
+            width: 100%;
+            max-height: 400px;
+            display: block;
+        }
+
+        .output-box {
+            background-color: #121318;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #d1d5db;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-tracker {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #121318;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Melolo Studio Manager</h1>
+        <p>Generasi Naskah & Pemutar Drama 10 Episode (10 Menit)</p>
+    </div>
+
+    <!-- PENGATURAN PROJECT -->
+    <div class="card">
+        <h2>1. Pengaturan Judul Drama</h2>
+        <div class="form-group">
+            <label>Judul Drama Short:</label>
+            <input type="text" id="dramaTitle" value="CEO Menyamar Jadi Petani" placeholder="Masukkan judul drama...">
+        </div>
+        <div class="form-group">
+            <label>API Key Gemini (Opsional):</label>
+            <input type="password" id="apiKey" placeholder="Masukkan Gemini API Key jika ada">
+        </div>
+    </div>
+
+    <!-- TRACKER PROGRESS EPISODE -->
+    <div class="card">
+        <h2>2. Naskah & Voice Per Episode</h2>
+        <div class="progress-tracker">
+            <span>Progress Produksi:</span>
+            <strong id="epCountText" style="color: var(--accent);">0 / 10 Episode Siap</strong>
+        </div>
+
+        <div class="form-group">
+            <label>Pilih Episode yang Mau Dibuat:</label>
+            <select id="selectEpisode" onchange="loadEpisodeData()">
+                <option value="1">Episode 1 (Durasi 1 Menit)</option>
+                <option value="2">Episode 2 (Durasi 1 Menit)</option>
+                <option value="3">Episode 3 (Durasi 1 Menit)</option>
+                <option value="4">Episode 4 (Durasi 1 Menit)</option>
+                <option value="5">Episode 5 (Durasi 1 Menit)</option>
+                <option value="6">Episode 6 (Durasi 1 Menit)</option>
+                <option value="7">Episode 7 (Durasi 1 Menit)</option>
+                <option value="8">Episode 8 (Durasi 1 Menit)</option>
+                <option value="9">Episode 9 (Durasi 1 Menit)</option>
+                <option value="10">Episode 10 (Durasi Climax 1 Menit)</option>
+            </select>
+        </div>
+
+        <button onclick="generateEpisodeScript()">Generate Naskah Episode Ini</button>
+        <button onclick="playVoicePreview()" class="btn-secondary" style="margin-top: 8px;">Dengarkan Suara (Voice Preview)</button>
+
+        <div class="output-box" id="scriptOutput">Klik 'Generate Naskah' untuk membuat alur cerita dan prompt visual episode yang dipilih.</div>
+    </div>
+
+    <!-- PENGGABUNGAN & UPLOAD VIDEO MP4 (10 MENIT) -->
+    <div class="card">
+        <h2>3. Upload Video Full (10 Menit MP4)</h2>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">
+            Setelah 10 episode digabung di CapCut menjadi 1 video utuh durasi 10 menit, upload file MP4-nya di bawah ini untuk diputar di aplikasi.
+        </p>
+
+        <div class="form-group">
+            <label>Pilih File Video MP4 dari Galeri HP:</label>
+            <input type="file" id="videoUploader" accept="video/mp4,video/*" onchange="loadVideo(event)">
+        </div>
+
+        <div class="video-container" id="videoWrapper" style="display: none;">
+            <video id="mainPlayer" controls></video>
+        </div>
+
+        <a id="downloadBtn" style="display: none;" download="Drama_Full_10Menit.mp4">
+            <button style="background-color: #00c853; margin-top: 10px;">Download File Video MP4</button>
+        </a>
+    </div>
+
+    <script>
+        let dramaData = {};
+
+        function generateEpisodeScript() {
+            const ep = document.getElementById('selectEpisode').value;
+            const title = document.getElementById('dramaTitle').value;
+            const output = document.getElementById('scriptOutput');
+
+            output.innerHTML = "Memproses naskah Episode " + ep + "...";
+
+            // Simulasi/Preset Generator Naskah & Prompt AI
+            setTimeout(() => {
+                const scriptText = `[NASKAH EPISODE ${ep} - ${title}]
+Durasi Target: 60 Detik (1 Menit)
+
+ADEGAN 1 (0-20 Detik):
+- Visual: Karakter Utama berdiri di bawah hujan, pakaian kumal.
+- Dialog: "Kalian pikir aku sudah hancur? Ini baru permulaan!"
+- Prompt AI Video: A handsome Asian man in rags standing in heavy rain, dramatic cinematic lighting, photorealistic 8k --ar 9:16
+
+ADEGAN 2 (20-60 Detik):
+- Visual: Mobil mewah hitam datang, pengawal membukakan pintu.
+- Dialog: "Selamat datang kembali, Tuan Presdir!"
+- Prompt AI Video: Luxurious black limousine arriving, guards opening door, cinematic slow motion, ultra detailed --ar 9:16
+
+---------------------------------------------------
+Gunakan Prompt Visual di atas ke Kling AI / Luma AI.
+Gunakan Teks Dialog di atas ke ElevenLabs / CapCut Voice.`;
+
+                dramaData[ep] = scriptText;
+                output.innerText = scriptText;
+                updateProgressTracker();
+            }, 500);
+        }
+
+        function updateProgressTracker() {
+            const count = Object.keys(dramaData).length;
+            document.getElementById('epCountText').innerText = count + " / 10 Episode Siap";
+        }
+
+        function loadEpisodeData() {
+            const ep = document.getElementById('selectEpisode').value;
+            const output = document.getElementById('scriptOutput');
+            if (dramaData[ep]) {
+                output.innerText = dramaData[ep];
+            } else {
+                output.innerText = "Episode " + ep + " belum dibuat. Klik tombol 'Generate Naskah' di atas.";
+            }
+        }
+
+        function playVoicePreview() {
+            const outputText = document.getElementById('scriptOutput').innerText;
+            if (!('speechSynthesis' in window)) {
+                alert('Browser/HP kamu tidak mendukung fitur Web Speech.');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(outputText);
+            utterance.lang = 'id-ID';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function loadVideo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const videoURL = URL.createObjectURL(file);
+                const player = document.getElementById('mainPlayer');
+                const wrapper = document.getElementById('videoWrapper');
+                const downloadBtn = document.getElementById('downloadBtn');
+
+                player.src = videoURL;
+                wrapper.style.display = 'block';
+
+                downloadBtn.href = videoURL;
+                downloadBtn.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+  </html>
+                                                                                                                                            
